@@ -1,0 +1,668 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+  
+}
+<link href="~/Content/bootswatch/superhero/bootstrap.min.css" rel="stylesheet" />
+<style>
+    #background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('../../Assests/bgImg/pexels-photo-117471.jpeg');
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: 100%;
+        opacity: 0.4;
+        filter: alpha(opacity=40);
+        z-index: -1;
+    }
+
+</style>
+<div id="background"></div>
+<div class="row">
+    <div class="col-xs-12 text-center">
+        <h1 class="center-block">SweepSmart</h1>
+        <h3 class="center-block">The Street Sweeper Reminder</h3>
+        <h5 class="center-block">Making Lives Better for Angelenos</h5>
+        <h5 class="center-block">Keeping Windshields Ticket-Free</h5>
+      @*  <div class="text-align" id="thepicture" style="width: 18em; margin: auto;"><img class="img-responsive" src="http://www.billfrymire.com/gallery/weblarge/driver-perspective-night-neon-city.jpg" style="margin: auto;" /></div>*@
+        <br />
+        <div class="AlltheInformation">
+
+            <div class="themainContainer">
+
+                <div>
+                    <button type="button" id="buttonClick" class="btn btn-primary" style="border-radius: 5px">Get my Sweep Location</button>
+                </div>
+                <div>
+                    <label>Or enter an address here:</label>
+                </div>
+                <div>
+                    <input id="inputAddress" placeholder="Address" />
+                    
+                </div>
+                <div>
+                    <button id="SubmitAddress" class="btn btn-sm btn-success" style="margin-top:15px; border-radius: 5px">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr />
+<footer>
+    <p>
+        Created by: &nbsp <a href="https://www.linkedin.com/in/sarah-furgatch-a7b6b448">&nbspSarah Furgatch,</a>
+        <a href="https://www.linkedin.com/in/neil-marcel-engracia-a7a69092">&nbspNeil Marcel Engracia,</a>
+        <a href="https://www.linkedin.com/in/mark-medina-2b9a7a51">&nbspMark Medina,</a>
+        <a href="https://www.linkedin.com/in/dan-phung-78200b70">&nbspDan Phung</a>
+    </p>
+</footer>
+
+@*  onFocus="geolocate()" *@
+    
+
+
+@section scripts{
+    <script src="~/Scripts/sabio.js"></script>
+    <script src="~/scripts/jquery.validate.min.js"></script>
+    @*<script src="~/Scripts/sabio.services.sweep.js"></script>*@
+    <script src="~/Scripts/soda-js/lib/soda-js.bundle.js"></script>
+    <script src="~/scripts/sabio.services.reference.js"></script>
+    <script>
+
+            //crime  https://data.lacity.org/resource/kh8g-6365.json"
+            ///arrests https://data.lacity.org/resource/4yt4-9aq2.json"
+            //street sweep: https://data.lacity.org/resource/x8i3-2x54.json
+
+        sabio.page.startUp = function () {
+
+            $('.navbar-brand').text("SweepSmart");
+
+            /*VARIABLES*/
+            sabio.services.sweepUrl = "https://data.lacity.org/resource/x8i3-2x54.json"
+            //var streetString = "La+Brea+and+Arlington";
+           // var route_no = "3P204 Th";
+            //var key_word = "Jefferson";
+            //var likeClause = "like " + "'%25" + key_word + "%25'";
+            //var streetOne = "La Brea Ave";
+            //var streetTwo = "Santa Monica Fwy";
+            var sodaOpts = {
+                "username": "djtutolo@hotmail.com",
+                "password": "1914djtu",
+                "apiToken": "GlV1eucwQDqMsnwU6ghFFNFto"
+            }
+
+            /*ON PAGE LOAD*/
+            //sabio.page.getAllSweepData();
+           // sabio.page.getSweepDataByRouteNo(route_no);
+            //sabio.page.createStreetPiars();
+            //sabio.page.getlocation();
+            //var streetString = sabio.page.createStreetString(streetOne, streetTwo);
+            //sabio.page.getGeoCordsByIntersection(streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+
+            //var boundaries = "La Brea Ave to Arlington Ave- Santa Monica Fwy to Adams Blvd";
+            ////var boundaries = "Adams Blvd to Jefferson Blvd- La Cienega Blvd to Hauser Blvd";
+            ////console.log("boundaries: ", boundaries);
+
+            ////sabio.page.streetPairsArray = sabio.page.createStreetPairs(boundaries);
+            ////console.log("sabio.page.streetPairsArray: ", sabio.page.streetPairsArray);
+
+            ////sabio.page.index = 0;
+
+            //////convert to street string
+            ////sabio.page.streetString = sabio.page.createStreetString(sabio.page.streetPairsArray[sabio.page.index]);
+
+            ////console.log("sabio.page.streetString", sabio.page.streetString);
+
+            //////sabio.page.currentStreetPair = sabio.page.streetPairsArray[i][0] + "+" + sabio.page.streetPairsArray[i][1];
+
+            //////console.log("sabio.page.streetString", sabio.page.streetString);
+
+            //////get geocords
+            ////sabio.page.getGeoCordsByIntersection(sabio.page.streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+
+            $('#buttonClick').on('click', sabio.page.getlocation);
+            $('.AlltheInformation').on('click', '.hereIsclicked', sabio.page.handlers.OpenModalForPhoneNumber);
+            $('.AlltheInformation').on('click', '.InsertIntoDataBase', sabio.page.handlers.savebuttonPhoneNumberAjaxCall);
+            $('#SubmitAddress').on('click', sabio.page.handlers.submitButton);
+        }
+        
+        /*HELPERS*/
+        sabio.page.createStreetString = function (streetArray) {
+            var streetString = streetArray[0].replace(/ /g, "+") + "+and+" + streetArray[1].replace(/ /g, "+");
+            return streetString;
+        };
+ 
+        sabio.page.createStreetPairs = function (boundaries) {
+
+            //console.log(boundaries);
+
+            sabio.page.streets = [];
+            sabio.page.streetsAll = [];
+            sabio.page.pair1 = [];
+            sabio.page.pair2 = [];
+            sabio.page.pair3 = [];
+            sabio.page.pair4 = [];
+            sabio.page.boundarySplitExceptions = [];
+
+            if (boundaries.indexOf("/") >= 0) {
+
+                sabio.page.pairArray = boundaries.split("/");
+
+            } else if (boundaries.indexOf("-") >= 0) {
+
+                sabio.page.pairArray = boundaries.split("-");
+
+                console.log("sabio.page.pairArray: ", sabio.page.pairArray);
+            } else {
+
+                sabio.page.boundarySplitExceptions.push(boundaries);
+
+            };
+
+
+            $.each(sabio.page.pairArray, function (key, value) {
+
+                sabio.page.splitPairArray = value.split(" to ");
+
+                //console.log("sabio.page.splitPairArray: ", sabio.page.splitPairArray);
+
+                $.each(sabio.page.splitPairArray, function (key, value) {
+                    sabio.page.streets.push(value);
+                });
+
+            /*HELPERS*/
+
+            });
+        }
+
+        sabio.page.createStreetString = function (streetArray) {
+            var streetString = streetArray[0].replace(/ /g, "+") + "+and+" + streetArray[1].replace(/ /g, "+");
+            return streetString;
+        };
+            /*REQUESTS*/
+            sabio.page.getAllSweepData = function () {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    //.limit(5)
+                    //.where({ issuing_agency: 'POLICE' })
+                    //.order('fine')
+                    .getRows()
+                        .on('success', sabio.page.onGetAllSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+            sabio.page.createStreetPairs = function (boundaries) {
+
+                //console.log(boundaries);
+
+                sabio.page.streets = [];
+                sabio.page.streetsAll = [];
+                sabio.page.pair1 = [];
+                sabio.page.pair2 = [];
+                sabio.page.pair3 = [];
+                sabio.page.pair4 = [];
+                sabio.page.boundarySplitExceptions = [];
+
+                if (boundaries.indexOf("/") >= 0) {
+
+                    sabio.page.pairArray = boundaries.split("/");
+
+                } else if (boundaries.indexOf("-") >= 0) {
+
+                    sabio.page.pairArray = boundaries.split("-");
+
+                    console.log("sabio.page.pairArray: ", sabio.page.pairArray);
+                } else {
+
+                    sabio.page.boundarySplitExceptions.push(boundaries);
+
+                };
+
+                $.each(sabio.page.pairArray, function (key, value) {
+
+                    sabio.page.splitPairArray = value.split(" to ");
+
+                    //console.log("sabio.page.splitPairArray: ", sabio.page.splitPairArray);
+
+                    $.each(sabio.page.splitPairArray, function (key, value) {
+                        sabio.page.streets.push(value);
+                    });
+
+                    //console.log("sabio.page.streets: ", sabio.page.streets);
+
+                });
+
+                sabio.page.pair1.push($.trim(sabio.page.streets[0]), $.trim(sabio.page.streets[1]));
+                console.log("sabio.page.pair1: ", sabio.page.pair1);
+
+                sabio.page.pair2.push($.trim(sabio.page.streets[0]), $.trim(sabio.page.streets[3]));
+                console.log("sabio.page.pair2: ", sabio.page.pair2);
+
+                sabio.page.pair3.push($.trim(sabio.page.streets[1]), $.trim(sabio.page.streets[2]));
+                console.log("sabio.page.pair3: ", sabio.page.pair3);
+
+                sabio.page.pair4.push($.trim(sabio.page.streets[1]), $.trim(sabio.page.streets[3]));
+                console.log("sabio.page.pair4: ", sabio.page.pair4);
+
+                sabio.page.resultArray = [];
+                sabio.page.resultArray = [sabio.page.pair1, sabio.page.pair2, sabio.page.pair3, sabio.page.pair4];
+
+                return sabio.page.resultArray;
+            };
+
+            sabio.page.getGeoCordsByIntersection = function (streetString, onAjaxSuccess, onAjaxError) {
+                //sabio.services.intersection = "http://maps.googleapis.com/maps/api/geocode/json?address=" +
+                //firstStreet + "+and+" + secondStreet +
+                //+ ",+los+angeles&sensor=false";
+                var url = "http://maps.googleapis.com/maps/api/geocode/json?address=" + streetString + ",+los+angeles&sensor=false";
+                console.log(url);
+                var settings = {
+                    cache: false
+                        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+                        , dataType: "json"
+                        , async: false
+                        , success: onAjaxSuccess
+                        , error: onAjaxError
+                        , type: "GET"
+                };
+
+                $.ajax(url, settings);
+            };
+
+            sabio.page.getlocation = function () {
+                //sabio.services.googleSearchBytext("USC", sabio.page.googlesearchOnSuccess);
+                navigator.geolocation.getCurrentPosition(sabio.page.getLocationSuccess, sabio.page.onAjaxError);
+            }
+
+            //FILTER: BY ROUTE NO
+            sabio.page.getSweepDataByRouteNo = function (route_no) {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    //.limit(5)
+                    .where({ route_no: route_no })
+                    //.order('fine')
+                    .getRows()
+                        .on('success', sabio.page.onGetByRouteNoSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+            //FILTER: BY COUNCIL DISTRICT
+            sabio.page.getSweepDataByCouncilDistrict = function (cd) {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    .where({ cd: cd })
+                    .getRows()
+                        .on('success', sabio.page.onGetByCouncilDistrictSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+            //FILTER: BY START TIME
+            sabio.page.getSweepDataByStartTime = function (time_start) {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    .where({ time_start: time_start })
+                    .getRows()
+                        .on('success', sabio.page.onGetByTimeStartSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+            //FILTER: BY END TIME
+            sabio.page.getSweepDataByEndTime = function (time_end) {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    .where({ time_end: time_end })
+                    .getRows()
+                        .on('success', sabio.page.onGetByTimeEndSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+            //FILTER: BY BOUNDARIES
+            sabio.page.getSweepDataByBoundaries = function (boundaries) {
+                var consumer = new soda.Consumer('data.lacity.org');
+                var rows = [];
+                consumer.query()
+                    .withDataset('x8i3-2x54')
+                    .where({ boundaries: boundaries })
+                    .getRows()
+                        .on('success', sabio.page.onGetByBoundariesSuccess)
+                        .on('error', function (error) { console.error(error); });
+
+            }
+
+
+            /*RESPONSES*/
+
+            //ERROR:
+            sabio.page.onAjaxError = function (jqXHR, textStatus, errorThrown) {
+                console.log("error");
+                console.log(jqXHR);
+            }
+
+            //GET ALL SUCCESS
+            sabio.page.onGetAllSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getAllData = data;
+            }
+
+            //GET BY ROUTE SUCCESS:
+            sabio.page.onGetByRouteNoSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getByRouteData = data;
+                console.log('success', data);
+                sabio.page.handlers.buttonClick();
+            }
+
+            //GET BY COUNCIL SUCCESS:
+            sabio.page.onGetByCouncilDistrictSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getByCouncilDistrictData = data;
+            }
+
+            //GET BY TIME START SUCCESS:
+            sabio.page.onGetByTimeStartSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getByTimeStartData = data;
+            }
+
+            //GET BY TIME END SUCCESS:
+            sabio.page.onGetByTimeEndSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getByTimeEndData = data;
+            }
+
+            //GET BY BOUNDARIES SUCCESS:
+            sabio.page.onGetByBoundariesSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getByBoundariesData = data;
+            }
+
+            //GET BY LIKE SUCCESS (currently not working):
+            sabio.page.onGetLikeSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.getLikeData = data;
+            }
+
+            sabio.page.getGeoCordsByIntersectionSuccess = function (data, textStatus, jqXHR) {
+                sabio.page.data = data;
+                //console.log("data", data);
+
+                console.log("inside getGeoCordsByIntersectionSuccess. sabio.page.streetString: " + sabio.page.streetString);
+
+                sabio.page.lat = data.results[0].geometry.location.lat;
+                sabio.page.lng = data.results[0].geometry.location.lng;
+
+                postData = {
+                    //"RouteId": "4P123",
+                    "RouteId": "10P137 M",
+                    "StreetPair": sabio.page.streetString,
+                    "Lat": sabio.page.lat,
+                    "Long": sabio.page.lng
+                }
+
+                stringifiedPostData = JSON.stringify(postData);
+
+                console.log(postData);
+
+                //post to reference api
+                sabio.services.reference.post(stringifiedPostData, sabio.page.postReferenceOnSuccess, sabio.page.onAjaxError);
+
+                //later move this to postOnSuccess function:
+                sabio.page.index += 1
+                while (sabio.page.index < 4) {
+                    sabio.page.streetString = sabio.page.createStreetString(sabio.page.streetPairsArray[sabio.page.index]);
+                    sabio.page.getGeoCordsByIntersection(sabio.page.streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+                };
+            }
+
+        //this is the usercurrent long and lat
+        //will run when the "Get my Sweep Location" is clicked
+            sabio.page.getLocationSuccess = function (data) {
+                console.log(data);
+                sabio.page.lng = data.coords.longitude;
+                sabio.page.lat = data.coords.latitude;
+
+
+                var jsonFormat = {
+                    Latitude: sabio.page.lat,
+                    Longitude: sabio.page.lng
+                }
+
+                JSON.stringify(jsonFormat)
+                sabio.services.reference.postLatLong(JSON.stringify(jsonFormat), sabio.page.testingtosee);
+
+
+                // we might not need this.. this will turn user current latlong into an address
+                //sabio.services.ajaxcallgoogleaddress(sabio.page.lat, sabio.page.lng,sabio.page.geolocationdata);
+            }
+
+            sabio.page.postReferenceOnSuccess = function (data) {
+                console.log("Reference POST successful");
+            };
+
+        
+          // we might not need this.. this will turn user current latlong into an address
+            sabio.services.ajaxcallgoogleaddress = function (lat, long, onSuccess, onError) {
+                var url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lat + ',' + long + '&los+angeles&key=AIzaSyD63w5E6cEs1Gx5rLEjvSVGa5Ap_0FKJnY';
+
+                var settings = {
+                    cache: false
+             , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+
+             , dataType: "json"
+             , success: onSuccess
+             , error: onError
+             , type: "GET"
+                };
+                $.ajax(url, settings);
+            }
+
+            sabio.page.geolocationdata = function (data) {
+                console.log('you did it', data);
+
+                console.log(data.results[0].formatted_address);
+                sabio.page.currentUserAddress = data.results[0].formatted_address;
+            }
+
+
+            sabio.page.handlers.buttonClick = function () {
+                $('.themainContainer').hide();
+                //get current user location for long lat
+                $('#thepicture').hide();
+                
+                console.log(sabio.info);
+                console.log('sweep', sabio.page.getByRouteData[0]);
+                var route_no = sabio.page.getByRouteData[0].route_no;
+                time_start = sabio.page.getByRouteData[0].time_start;
+                time_end = sabio.page.getByRouteData[0].time_end;
+                var boundaries = sabio.page.getByRouteData[0].boundaries;
+                var newRoute_no = route_no.split(" ");
+                days_before = sabio.info.DaysUntilSweep;
+                var date_next_sweep = sabio.info.NextSweep;
+                date_next_sweep = date_next_sweep.substring(0, date_next_sweep.indexOf('T'))
+                console.log(newRoute_no);
+                var templateString = $('#DataWhenButtonIsClick').html();
+                var templateClone = $(templateString).clone();
+                templateClone.find('.boundaries').text('Your closest street: ' + boundaries);
+                templateClone.find('.route_no').text('The sweep day is: ' + newRoute_no[1]);
+                templateClone.find('.no_of_days').text('Number of days before next sweep: ' + days_before);
+                templateClone.find('.date_next_sweep').text('The date of the next sweep is: ' + date_next_sweep);
+                templateClone.find('.time_start').text('Time Start: ' + time_start);
+                templateClone.find('.time_end').text('Time End: ' + time_end);
+                $(templateClone).appendTo('.AlltheInformation');
+
+            }
+
+            sabio.page.handlers.OpenModalForPhoneNumber = function (event) {
+                event.preventDefault();
+                $('.phoneNumberInputClass').show();
+            }
+
+            sabio.page.handlers.savebuttonPhoneNumberAjaxCall = function () {
+                
+                var date_next_sweep = $('.date_next_sweep').text();
+                var time_start = $('.time_start').text();
+                var time_end = $('.time_end').text();
+                var days_before = $('.no_of_days').text();
+                var phonenumberJson = {
+                    To: $('#phoneNumberInput').val(),
+                    Body: "Thank you for using SweepSmart, " + date_next_sweep + ", " + time_start + ", " + time_end + " and " + days_before
+
+                }
+                sabio.services.reference.postPhoneNumber(JSON.stringify(phonenumberJson), sabio.page.phonenumberSuccess);
+
+            }
+            sabio.page.phonenumberSuccess = function (data) {
+                alert('Please check your phone.');
+            }
+
+            sabio.page.handlers.submitButton = function () {
+                var SubmitAddress = $('#inputAddress').val();
+                console.log('ddd')
+                sabio.services.googleSearchBytext(SubmitAddress, sabio.page.googlesearchOnSuccess);
+
+            }
+            sabio.services.googleSearchBytext = function (id, onSuccess, onError) {
+                url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + id + '&los+angeles&US&key=AIzaSyD63w5E6cEs1Gx5rLEjvSVGa5Ap_0FKJnY';
+                var settings = {
+                    cache: false
+              , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+              , dataType: "json"
+              , success: onSuccess
+              , error: onError
+              , type: "GET"
+                };
+                $.ajax(url, settings);
+            }
+            //google text bar search
+            sabio.page.googlesearchOnSuccess = function (data) {
+                console.log(data);
+                console.log(data.results[0].geometry.location.lat);
+                console.log(data.results[0].geometry.location.lng);
+                sabio.page.enterlat = data.results[0].geometry.location.lat;
+                sabio.page.enterlng = data.results[0].geometry.location.lng;
+                var jsonFormat = {
+                    Latitude: sabio.page.enterlat,
+                    Longitude: sabio.page.enterlng
+                }
+
+        
+                sabio.services.reference.postLatLong(JSON.stringify(jsonFormat), sabio.page.testingtosee);
+            }
+
+            sabio.page.testingtosee = function (data) {
+                console.log(data);
+                sabio.info = data.Item;
+                sabio.toStringRouteNr = data.Item.RouteNr;
+                console.log('the string is here', sabio.toStringRouteNr);
+                sabio.page.getSweepDataByRouteNo(sabio.toStringRouteNr);
+
+                
+
+            }
+
+            //Google Autocomplete
+            // This example displays an address form, using the autocomplete feature
+            // of the Google Places API to help users fill in the information.
+
+            // This example requires the Places library. Include the libraries=places
+            // parameter when you first load the API. For example:
+            // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+
+            var placeSearch, autocomplete;
+            var componentForm = {
+                street_number: 'short_name',
+                route: 'long_name',
+                locality: 'long_name',
+                administrative_area_level_1: 'short_name',
+                country: 'long_name',
+                postal_code: 'short_name'
+            };
+
+            function initAutocomplete() {
+                // Create the autocomplete object, restricting the search to geographical
+                // location types.
+                autocomplete = new google.maps.places.Autocomplete(
+
+                      (document.getElementById('inputAddress')),///////////////////////////////////////////////////////
+                  { types: ['geocode'] });
+
+                // When the user selects an address from the dropdown, populate the address
+                // fields in the form.
+                autocomplete.addListener('place_changed', fillInAddress);
+            }
+    
+            function fillInAddress() {
+                // Get the place details from the autocomplete object.
+                var place = autocomplete.getPlace();
+
+                for (var component in componentForm) {
+                  //  document.getElementById(component).value = '';
+                    document.getElementById(component).disabled = false;
+                }
+
+                // Get each component of the address from the place details
+                // and fill the corresponding field on the form.
+                for (var i = 0; i < place.address_components.length; i++) {
+                    var addressType = place.address_components[i].types[0];
+                    if (componentForm[addressType]) {
+                        var val = place.address_components[i][componentForm[addressType]];
+                        document.getElementById(addressType).value = val;
+                    }
+                }
+            }
+
+            // Bias the autocomplete object to the user's geographical location,
+            // as supplied by the browser's 'navigator.geolocation' object.
+            function geolocate() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        var geolocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        var circle = new google.maps.Circle({
+                            center: geolocation,
+                            radius: position.coords.accuracy
+                        });
+                        autocomplete.setBounds(circle.getBounds());
+                    });
+                }
+            }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDZpzfWiKRGiXxSINtd0rNCLBvt5AYuA_4&libraries=places&callback=initAutocomplete"
+        async defer></script>
+        <script type="text/template" id="DataWhenButtonIsClick">
+            <div class="well well-lg">
+                <p class="boundaries">Look, I'm in a large well!</p>
+                <p class="route_no">Look, I'm in a large well!</p>
+                <p class="no_of_days">Look, I'm in a large well!</p>
+                <p class="date_next_sweep">Look, I'm in a large well!</p>
+                <p class="time_start">Look, I'm in a large well!</p>
+                <p class="time_end">Look, I'm in a large well!</p>
+
+            <div>
+                <p>
+                    If you would like a reminder for this location please click <a href="" class="hereIsclicked">here</a>.
+                </p>
+                <div class="phoneNumberInputClass" style="display:none">
+                    <label>PhoneNumber : </label>
+                    <input type="text" id="phoneNumberInput"  placeholder="(###)-###-#####"/>
+                    <button type="submit" class="btn btn-success InsertIntoDataBase">Save</button>
+                </div>
+            </div>
+        </div>
+    </script>
+}
+

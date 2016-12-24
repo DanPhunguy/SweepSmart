@@ -1,0 +1,358 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    //Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+<div class="row">
+
+
+</div>
+
+@section scripts{
+    <script src="~/Scripts/sabio.js"></script>
+    <script src="~/scripts/jquery.validate.min.js"></script>
+    @*<script src="~/Scripts/sabio.services.sweep.js"></script>*@
+    <script src="~/Scripts/soda-js/lib/soda-js.bundle.js"></script>
+    <script src="~/scripts/sabio.services.reference.js"></script>
+    <script>
+
+        //crime  https://data.lacity.org/resource/kh8g-6365.json"
+        ///arrests https://data.lacity.org/resource/4yt4-9aq2.json"
+        //street sweep: https://data.lacity.org/resource/x8i3-2x54.json
+
+        sabio.page.startUp = function () {
+
+            /*VARIABLES*/
+            sabio.services.sweepUrl = "https://data.lacity.org/resource/x8i3-2x54.json"
+            //var streetString = "La+Brea+and+Arlington";
+            //var route_no = "12P127";
+            //var key_word = "Jefferson";
+            //var likeClause = "like " + "'%25" + key_word + "%25'";
+            //var streetOne = "La Brea Ave";
+            //var streetTwo = "Santa Monica Fwy";
+            var sodaOpts = {
+                "username": "djtutolo@hotmail.com",
+                "password": "1914djtu",
+                "apiToken": "GlV1eucwQDqMsnwU6ghFFNFto"
+            }
+
+            /*ON PAGE LOAD*/
+            sabio.page.getAllSweepData();
+            //sabio.page.getSweepDataByRouteNo(route_no);
+            //sabio.page.createStreetPiars();
+            //sabio.page.getlocation();
+            //var streetString = sabio.page.createStreetString(streetOne, streetTwo);
+            //sabio.page.getGeoCordsByIntersection(streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+
+            //sabio.page.createReference(data[0].boundaries, data[0].route_no);
+            //sabio.page.getSweepDataByCouncilDistrict(15); 
+        };
+
+        /*HELPERS*/
+
+        sabio.page.getSweepDataByCouncilDistrict = function (cd) {
+            var consumer = new soda.Consumer('data.lacity.org');
+            var rows = [];
+            consumer.query()
+                .withDataset('x8i3-2x54')
+                .where({ cd: cd })
+                .getRows()
+                    .on('success', sabio.page.onGetByCouncilDistrictSuccess)
+                    .on('error', function (error) { console.error(error); });
+
+        }
+
+        sabio.page.onAjaxError = function (jqXHR, textStatus, errorThrown) {
+            console.log("error");
+            console.log(jqXHR);
+        }
+
+        //GET BY COUNCIL SUCCESS:
+        //sabio.page.onGetByCouncilDistrictSuccess = function (data, textStatus, jqXHR) {
+        //    //sabio.page.getByCouncilDistrictData = data;
+
+        //    sabio.page.incrementer = 0
+
+        //    console.log("data[sabio.page.incrementer].boundaries", data[sabio.page.incrementer].boundaries);
+        //    console.log("data[sabio.page.incrementer].route_no", data[sabio.page.incrementer].route_no);
+
+        //    sabio.page.createReference(data[sabio.page.incrementer].boundaries, data[sabio.page.incrementer].route_no);
+        //}
+
+
+        sabio.page.getAllSweepData = function () {
+            var consumer = new soda.Consumer('data.lacity.org');
+            var rows = [];
+            consumer.query()
+                .withDataset('x8i3-2x54')
+                .getRows()
+                    .on('success', sabio.page.onGetAllSuccess)
+                    .on('error', function (error) { console.error(error); });
+
+        }
+
+        //GET ALL SUCCESS
+        sabio.page.onGetAllSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.incrementer = 557; 
+            sabio.page.getAllData = data;
+            console.log(data[sabio.page.incrementer]);
+            sabio.page.createReference(data[sabio.page.incrementer].boundaries, data[sabio.page.incrementer].route_no);
+
+            //sabio.page.incrementer = 328
+            //310 - 328
+            //8, 1, 9, 14
+            //8: 52-75
+            //1:
+            ////9: 537-593
+            //556-557 - stopped here
+            //already did 565
+            //14:
+            //536, 537 (index 537, 538)
+
+            console.log("data[sabio.page.incrementer].boundaries", data[sabio.page.incrementer].boundaries);
+            console.log("data[sabio.page.incrementer].route_no", data[sabio.page.incrementer].route_no); 
+
+            sabio.page.createReference(data[sabio.page.incrementer].boundaries, data[sabio.page.incrementer].route_no);
+            
+        };
+
+        sabio.page.createReference = function (boundaries, route) {
+            //var boundaries = "La Brea Ave to Arlington Ave- Santa Monica Fwy to Adams Blvd";
+            //var boundaries = "Adams Blvd to Jefferson Blvd- La Cienega Blvd to Hauser Blvd";
+            //console.log("boundaries: ", boundaries);
+
+            sabio.page.route = route;
+            console.log("sabio.page.route", sabio.page.route); 
+
+            sabio.page.streetPairsArray = sabio.page.createStreetPairs(boundaries);
+            console.log("sabio.page.streetPairsArray: ", sabio.page.streetPairsArray);
+
+            sabio.page.index = 0;
+
+            //convert to street string
+            sabio.page.streetString = sabio.page.createStreetString(sabio.page.streetPairsArray[sabio.page.index]);
+
+            console.log("sabio.page.streetString", sabio.page.streetString);
+            //sabio.page.currentStreetPair = sabio.page.streetPairsArray[i][0] + "+" + sabio.page.streetPairsArray[i][1];
+            //console.log("sabio.page.streetString", sabio.page.streetString);
+
+            //get geocords
+            sabio.page.getGeoCordsByIntersection(sabio.page.streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+        };
+
+        sabio.page.createStreetString = function (streetArray) {
+            var streetString = streetArray[0].replace(/ /g, "+") + "+and+" + streetArray[1].replace(/ /g, "+");
+            return streetString;
+        };
+
+
+        /*REQUESTS*/
+
+        sabio.page.createStreetPairs = function (boundaries) {
+
+            //console.log(boundaries);
+
+            sabio.page.streets = [];
+            sabio.page.streetsAll = [];
+            sabio.page.pair1 = [];
+            sabio.page.pair2 = [];
+            sabio.page.pair3 = [];
+            sabio.page.pair4 = [];
+            sabio.page.boundarySplitExceptions = [];
+
+            if (boundaries.indexOf("/") >= 0) {
+
+                sabio.page.pairArray = boundaries.split("/");
+
+            } else if (boundaries.indexOf("-") >= 0) {
+
+                sabio.page.pairArray = boundaries.split("-");
+
+                //console.log("sabio.page.pairArray: ", sabio.page.pairArray);
+            } else {
+
+                sabio.page.boundarySplitExceptions.push(boundaries);
+
+            };
+
+            $.each(sabio.page.pairArray, function (key, value) {
+
+                sabio.page.splitPairArray = value.split(" to ");
+
+                //console.log("sabio.page.splitPairArray: ", sabio.page.splitPairArray);
+
+                $.each(sabio.page.splitPairArray, function (key, value) {
+                    sabio.page.streets.push(value);
+                });
+
+                //console.log("sabio.page.streets: ", sabio.page.streets);
+
+            });
+
+            sabio.page.pair1.push($.trim(sabio.page.streets[0]), $.trim(sabio.page.streets[1]));
+            //console.log("sabio.page.pair1: ", sabio.page.pair1);
+
+            sabio.page.pair2.push($.trim(sabio.page.streets[0]), $.trim(sabio.page.streets[3]));
+            //console.log("sabio.page.pair2: ", sabio.page.pair2);
+
+            sabio.page.pair3.push($.trim(sabio.page.streets[1]), $.trim(sabio.page.streets[2]));
+            //console.log("sabio.page.pair3: ", sabio.page.pair3);
+
+            sabio.page.pair4.push($.trim(sabio.page.streets[1]), $.trim(sabio.page.streets[3]));
+            //console.log("sabio.page.pair4: ", sabio.page.pair4);
+
+            sabio.page.resultArray = [];
+            sabio.page.resultArray = [sabio.page.pair1, sabio.page.pair2, sabio.page.pair3, sabio.page.pair4];
+
+            return sabio.page.resultArray;
+        };
+
+        sabio.page.getGeoCordsByIntersection = function (streetString, onAjaxSuccess, onAjaxError) {
+            //sabio.services.intersection = "http://maps.googleapis.com/maps/api/geocode/json?address=" +
+            //firstStreet + "+and+" + secondStreet +
+            //+ ",+los+angeles&sensor=false";
+            var url = "http://maps.googleapis.com/maps/api/geocode/json?address=" + streetString + ",+los+angeles&sensor=false";
+            //console.log(url);
+            var settings = {
+                cache: false
+                    , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+                    , dataType: "json"
+                    , async: false
+                    , success: onAjaxSuccess
+                    , error: onAjaxError
+                    , type: "GET"
+            };
+
+            $.ajax(url, settings);
+        };
+
+        sabio.page.getlocation = function () {
+            navigator.geolocation.getCurrentPosition(sabio.page.getLocationSuccess, sabio.page.onAjaxError)
+        }
+
+        /*RESPONSES*/
+
+        //ERROR:
+        sabio.page.onAjaxError = function (jqXHR, textStatus, errorThrown) {
+            console.log("error");
+            console.log(jqXHR);
+        }
+
+        //GET BY ROUTE SUCCESS:
+        sabio.page.onGetByRouteNoSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getByRouteData = data;
+        }
+
+        //GET BY COUNCIL SUCCESS:
+        sabio.page.onGetByCouncilDistrictSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getByCouncilDistrictData = data;
+        }
+
+        //GET BY TIME START SUCCESS:
+        sabio.page.onGetByTimeStartSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getByTimeStartData = data;
+        }
+
+        //GET BY TIME END SUCCESS:
+        sabio.page.onGetByTimeEndSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getByTimeEndData = data;
+        }
+
+        //GET BY BOUNDARIES SUCCESS:
+        sabio.page.onGetByBoundariesSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getByBoundariesData = data;
+        }
+
+        //GET BY LIKE SUCCESS (currently not working):
+        sabio.page.onGetLikeSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.getLikeData = data;
+        }
+
+        sabio.page.getGeoCordsByIntersectionSuccess = function (data, textStatus, jqXHR) {
+            sabio.page.data = data;
+            console.log("data", data);
+
+            console.log("inside getGeoCordsByIntersectionSuccess. sabio.page.streetString: " + sabio.page.streetString);
+
+            sabio.page.lat = data.results[0].geometry.location.lat;
+            sabio.page.lng = data.results[0].geometry.location.lng;
+
+            postData = {
+                //"RouteId": "4P123",
+                //"RouteId": "10P137 M",
+                "RouteId": sabio.page.route,
+                "StreetPairs": sabio.page.streetString,
+                "Latitude": sabio.page.lat,
+                "Longitude": sabio.page.lng
+            }
+
+            stringifiedPostData = JSON.stringify(postData);
+
+            console.log(postData);
+
+            //post to reference api
+            sabio.services.reference.post(stringifiedPostData, sabio.page.postReferenceOnSuccess, sabio.page.onAjaxError);
+
+            
+
+        }
+
+        sabio.page.getLocationSuccess = function (data) {
+            console.log(data);
+            sabio.page.long = data.coords.longitude;
+            sabio.page.lat = data.coords.latitude;
+
+
+            sabio.services.ajaxcall(sabio.page.geolocationdata);
+        }
+
+        sabio.page.postReferenceOnSuccess = function (id) {
+            console.log("Reference POST successful. ID: " + id);
+
+            //later move this to postOnSuccess function:
+            
+            for (sabio.page.index; sabio.page.index < 4; sabio.page.index++) {
+                sabio.page.streetString = sabio.page.createStreetString(sabio.page.streetPairsArray[sabio.page.index]);
+                sabio.page.getGeoCordsByIntersection(sabio.page.streetString, sabio.page.getGeoCordsByIntersectionSuccess, sabio.page.onAjaxError);
+            };
+
+            //sabio.page.index += 1;
+
+            //sabio.page.incrementer += 1;
+            //while (sabio.page.incrementer < 3) {
+            //    sabio.page.createReference(data[sabio.page.incrementer].boundaries, data[sabio.page.incrementer].route_no);
+            //};
+
+            //sabio.page.incrementer
+
+            for (sabio.page.incrementer; sabio.page.incrementer < 558; sabio.page.incrementer++) {
+                sabio.page.createReference(sabio.page.getAllData[sabio.page.incrementer].boundaries, sabio.page.getAllData[sabio.page.incrementer].route_no);
+            };
+
+        };
+
+        sabio.services.ajaxcall = function (onSuccess, onError) {
+            var url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + sabio.page.lat + ',' + sabio.page.long + '&key=AIzaSyD63w5E6cEs1Gx5rLEjvSVGa5Ap_0FKJnY';
+
+            var settings = {
+                cache: false
+         , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+
+         , dataType: "json"
+         , success: onSuccess
+         , error: onError
+         , type: "GET"
+            };
+            $.ajax(url, settings);
+        }
+
+        sabio.page.geolocationdata = function (data) {
+            console.log('you did it', data);
+
+            console.log(data.results[0].formatted_address);
+            sabio.page.currentUserAddress = data.results[0].formatted_address;
+        }
+    </script>
+}
